@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="9e05b9c0-cef5-4f5f-8c44-0443b406d53d" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="parallel-for-each" doc:id="60180761-0daa-4726-aac1-c4bed9905f92" >
+		<http:listener doc:name="http listener" doc:id="8adf92c9-31c5-4f45-b751-bb0d2726f2e9" config-ref="HTTP_Listener_config" path="/parallel"/>
+
+<set-payload value='#[output application/json ---
+
+[
+	{"name":"alpha"},{"name":"beta"},{"name":"gamma"},{"name":"delta"}
+]]' doc:name="set payload" doc:id="259fb412-6187-45cb-9d9d-ce9b7ac1eec9" />
+		<parallel-foreach doc:name="parallel for each" collection="payload">
+	 <ee:transform doc:name="Transform Message" doc:id="77daacb1-69ec-4ba9-8239-17367f7b8e66" >
+        <ee:message >
+          <ee:set-payload ><![CDATA[%dw 2.0
+import * from dw::Runtime
+output application/json
+---
+message:payload.name ++ ' processed']]></ee:set-payload>
+        </ee:message>
+      </ee:transform>
+      <logger level="INFO" doc:name="for-each output" doc:id="317083df-1518-4a3c-ba18-bd8437489ed9" message="for-each output:  #[payload]"/>
+</parallel-foreach>
+		<ee:transform doc:name="aggregate payload" doc:id="79933ba3-ebf8-48ae-bbdd-65980ea78d11" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="log payload" doc:id="7cabf839-f269-4cba-ade8-cc781c64f096" message="#[payload]"/>
+		
+		
+	</flow>
+</mule>
